@@ -1,0 +1,20 @@
+/* e:\AIgame\src\styles\variables.css */
+:root {
+  /* Warm Dark Palette */
+  --bg-deep-brown: #1a1512;        /* 深焦糖色/碳黑 */
+  --grill-metal: #2c2f33;         /* 金属灰色 */
+  --grill-outline: #3a3d42;        /* 金属描边 */
+  --ember-glow: rgba(255, 69, 0, 0.2); /* 炭火微光 */
+  
+  /* Accent Colors */
+  --accent-amber: #ffbf00;       /* 琥珀色计分 */
+  --accent-red: #ff4500;         /* 警示红色 */
+  --text-gold: #ffd700;          /* 字体金色 */
+  
+  /* Texture & Depth */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.5);
+  
+  /* UI Layout */
+  --grill-gap: 20px;
+}
