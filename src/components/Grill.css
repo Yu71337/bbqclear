@@ -1,0 +1,63 @@
+/* e:\AIgame\src\components\Grill.css */
+@import '../styles/variables.css';
+
+.grill {
+    position: relative;
+    background: var(--grill-metal);
+    border: 2px solid var(--grill-outline);
+    border-radius: 12px;
+    padding: 15px;
+    height: 100%;
+    min-height: 180px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), var(--shadow-deep);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+
+.grill:hover {
+    box-shadow: inset 0 0 30px rgba(255,100,0,0.2), var(--shadow-deep);
+}
+
+.grill-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    z-index: 5;
+    height: 100%;
+}
+
+.slot {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed rgba(255,255,255,0.05);
+}
+
+/* 炭火层动画 */
+.embers {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(255, 69, 0, 0.4) 0%, transparent 60%);
+    opacity: 0.6;
+    animation: glow-pulse 4s infinite alternate ease-in-out;
+    pointer-events: none;
+}
+
+@keyframes glow-pulse {
+    from { opacity: 0.4; transform: scaleY(1); }
+    to { opacity: 0.8; transform: scaleY(1.2); }
+}
+
+.pending-indicator {
+    position: absolute;
+    bottom: 5px; right: 10px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.4);
+    z-index: 10;
+}

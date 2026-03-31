@@ -1,0 +1,40 @@
+/* e:\AIgame\src\components\Skewer.css */
+@import '../styles/variables.css';
+
+.skewer {
+    position: relative;
+    width: 60px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: grab;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,0.4));
+    z-index: 10;
+}
+
+.skewer:active {
+    cursor: grabbing;
+    transform: scale(1.1) rotate(5deg);
+}
+
+.skewer .icon {
+    font-size: 2.5rem;
+    margin-bottom: -15px;
+    z-index: 2;
+    text-shadow: 0 4px 6px rgba(0,0,0,0.6);
+}
+
+.skewer .stick {
+    width: 6px;
+    height: 100px;
+    background: linear-gradient(90deg, #5D4037 0%, #795548 50%, #5D4037 100%);
+    border-radius: 4px;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.1);
+}
+
+/* 选中高亮动画（待 GSAP 激活） */
+.skewer:hover {
+    filter: drop-shadow(0 0 10px var(--accent-amber));
+}
