@@ -13,6 +13,7 @@ function App() {
     score, 
     timeLeft, 
     gameStatus, 
+    gameOverReason,
     initGame,
     moveSkewer,
     completeServe
@@ -63,22 +64,31 @@ function App() {
 
   const [playerName, setPlayerName] = React.useState(localStorage.getItem('bbq-player-name') || '');
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState('');
 
   const handleSubmitScore = async () => {
     if (!playerName.trim()) return;
+    setSubmitError('');
     localStorage.setItem('bbq-player-name', playerName);
     
     try {
-      await fetch('/api/scores', {
+      const response = await fetch('/api/scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: playerName, score })
       });
+      
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || '上传失败');
+      }
+
       setIsSubmitted(true);
-      setLeaderboardKey(Date.now()); // 强制榜单重置获取最新数据
-      setIsLeaderboardOpen(true); // 已提交才展示榜单确认
+      setLeaderboardKey(Date.now());
+      setIsLeaderboardOpen(true);
     } catch (err) {
       console.error('Failed to submit score:', err);
+      setSubmitError(err.message || '网络连接或服务器异常');
     }
   };
 
@@ -135,7 +145,8 @@ function App() {
       {gameStatus !== 'playing' && (
         <div className="modal-overlay">
           <div className="game-modal">
-            <h2>{gameStatus === 'won' ? '🍖 完满上菜!' : '⏰ 时间到!'}</h2>
+            <h2>{gameStatus === 'won' ? '🍖 完满上菜!' : '⏰ 游戏结束'}</h2>
+            {gameOverReason && <div className="game-over-reason">{gameOverReason}</div>}
             <p style={{fontSize: '1.5rem', marginBottom: '1rem'}}>
                最终得分: <span style={{color: 'var(--text-gold)', fontWeight: 'bold'}}>{score}</span>
             </p>
@@ -152,6 +163,7 @@ function App() {
                  <button onClick={handleSubmitScore} disabled={!playerName.trim()}>
                    留下名号
                  </button>
+                 {submitError && <div className="submit-error">❌ {submitError}</div>}
                </div>
             ) : (
                <div className="submission-success">✅ 已成功传送到排行榜</div>
