@@ -1,8 +1,7 @@
-# Task Tracking (Iteration 3)
+# Task Tracking (Iteration 5)
 
 | Task | Status | Description |
 | ---- | ------ | ----------- |
-| Task 1: 基础 Bug 修正 | ✅ Completed | 计时器恢复，动画还原，拖放交互稳定性修复 |
-| Task 2: 烤熟度与烧焦系统 | ✅ Completed | 熟度自增，黑烟特效，烤焦逻辑与降级机制 |
-| Task 3: 智能保底匹配与终局逻辑 (方案 B) | ✅ Completed | 强制补位 3 连，死锁判定与弹框 |
-| Task 4: 服务端监控与日志优化 | 🚧 In Progress | 访问存储记录，提交状态回显优化 |
+| Task 1: 进度环替换烟雾特效 | ✅ Completed | 删除旧烟雾代码，新增 SVG 圆形进度环 |
+| Task 2: 烧焦死锁检测 | ✅ Completed | 食材烧焦时扫描场上匹配性，无匹配则游戏结束 |
+| Task 3: 验证与提交 | ✅ Completed | 已合并至 master，代码已提交 |
