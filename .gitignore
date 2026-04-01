@@ -26,3 +26,6 @@ dist-ssr
 # Worktrees
 .worktrees/
 worktrees/
+
+.vercel
+.env*.local
