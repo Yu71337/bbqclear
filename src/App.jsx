@@ -2,9 +2,11 @@
 import React from 'react';
 import { useGameState } from './hooks/useGameState';
 import Grill from './components/Grill';
+import LeaderboardDrawer from './components/LeaderboardDrawer';
 import './App.css';
 
 function App() {
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = React.useState(false);
   const { 
     grills, 
     score, 
@@ -13,31 +15,14 @@ function App() {
     initGame,
     moveSkewer,
     completeServe
-  } = useGameState();
+  } = useGameState(isLeaderboardOpen);
 
   const [selectedSkewer, setSelectedSkewer] = React.useState(null);
+  const leaderboardBtnRef = React.useRef(null);
   const lastPlayTime = React.useRef({ click: 0, serve: 0 });
-
-  // 音效触发器 (带防抖)
-  const playSound = (type) => {
-    const now = Date.now();
-    if (now - lastPlayTime.current[type] < 50) return;
-    lastPlayTime.current[type] = now;
-
-    const audios = {
-      click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-      serve: 'https://assets.mixkit.co/active_storage/sfx/2802/2802-preview.mp3'
-    };
-    if (audios[type]) {
-      const audio = new Audio(audios[type]);
-      audio.volume = 0.5;
-      audio.play().catch(() => {}); // 忽略自动播放限制导致的错误
-    }
-  };
 
   const handleSkewerClick = (skewerInfo) => {
     if (gameStatus !== 'playing') return;
-    playSound('click');
     if (selectedSkewer && selectedSkewer.grillId === skewerInfo.grillId && selectedSkewer.slotIdx === skewerInfo.slotIdx) {
       setSelectedSkewer(null);
     } else {
@@ -53,6 +38,7 @@ function App() {
   };
 
   const handleDragStart = (e, skewerInfo) => {
+    setSelectedSkewer(null);
     e.dataTransfer.setData('skewer-info', JSON.stringify(skewerInfo));
   };
 
@@ -74,8 +60,29 @@ function App() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const [playerName, setPlayerName] = React.useState(localStorage.getItem('bbq-player-name') || '');
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+
+  const handleSubmitScore = async () => {
+    if (!playerName.trim()) return;
+    localStorage.setItem('bbq-player-name', playerName);
+    
+    try {
+      await fetch('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: playerName, score })
+      });
+      setIsSubmitted(true);
+      setIsLeaderboardOpen(true); // 自动打开排行榜预览
+    } catch (err) {
+      console.error('Failed to submit score:', err);
+    }
+  };
+
   return (
     <div className="app-container">
+      {/* ... header ... */}
       <div className="header">
         <div className="score-panel">Score: {score}</div>
         <div className="timer-wrapper">
@@ -98,15 +105,29 @@ function App() {
               moveSkewer(info, gid, sid);
             }}
             onServeComplete={(gid) => {
-              playSound('serve');
               completeServe(gid);
             }}
             onSlotClick={handleSlotClick}
             onSkewerClick={handleSkewerClick}
             selectedSkewer={selectedSkewer}
+            serveTarget={leaderboardBtnRef.current}
           />
         ))}
       </div>
+
+      <div 
+        ref={leaderboardBtnRef}
+        className="leaderboard-entry" 
+        onClick={() => setIsLeaderboardOpen(true)}
+        title="查看排行榜"
+      >
+        🏆
+      </div>
+
+      <LeaderboardDrawer 
+        isOpen={isLeaderboardOpen} 
+        onClose={() => setIsLeaderboardOpen(false)} 
+      />
 
       {gameStatus !== 'playing' && (
         <div className="modal-overlay">
@@ -116,20 +137,27 @@ function App() {
                最终得分: <span style={{color: 'var(--text-gold)', fontWeight: 'bold'}}>{score}</span>
             </p>
             
-            <div className="high-scores">
-                <div className="score-row header">
-                    <span>日期</span>
-                    <span>高分榜 Top 10</span>
-                </div>
-                {(JSON.parse(localStorage.getItem('bbqclear-scores') || '[]')).map((s, idx) => (
-                    <div key={idx} className="score-row">
-                        <span>{s.date}</span>
-                        <span>{s.score} pts</span>
-                    </div>
-                ))}
-            </div>
+            {!isSubmitted ? (
+               <div className="name-input-section">
+                 <input 
+                   type="text" 
+                   placeholder="输入你的大厨名号..." 
+                   value={playerName}
+                   onChange={(e) => setPlayerName(e.target.value)}
+                   maxLength={10}
+                 />
+                 <button onClick={handleSubmitScore} disabled={!playerName.trim()}>
+                   留下名号
+                 </button>
+               </div>
+            ) : (
+               <div className="submission-success">✅ 已成功传送到排行榜</div>
+            )}
 
-            <button onClick={initGame}>再烤一轮!</button>
+            <button onClick={() => {
+              setIsSubmitted(false);
+              initGame();
+            }} className="restart-btn">再烤一轮!</button>
           </div>
         </div>
       )}

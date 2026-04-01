@@ -4,18 +4,18 @@ import Skewer from './Skewer';
 import { playServeAnimation, playPopScore } from '../animations/gameAnimations';
 import './Grill.css';
 
-const Grill = ({ grill, onDragStart, onDragOver, onDrop, onServeComplete, onSlotClick, onSkewerClick, selectedSkewer }) => {
+const Grill = ({ grill, onDragStart, onDragOver, onDrop, onServeComplete, onSlotClick, onSkewerClick, selectedSkewer, serveTarget }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
     if (grill.isServing) {
       const skewerEls = containerRef.current.querySelectorAll('.skewer');
       playPopScore(containerRef.current, 100);
-      playServeAnimation(skewerEls, () => {
+      playServeAnimation(skewerEls, serveTarget, () => {
         onServeComplete(grill.id);
       });
     }
-  }, [grill.isServing, grill.id, onServeComplete]);
+  }, [grill.isServing, grill.id, onServeComplete, serveTarget]);
 
   return (
     <div 
