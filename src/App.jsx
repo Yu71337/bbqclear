@@ -15,6 +15,43 @@ function App() {
     completeServe
   } = useGameState();
 
+  const [selectedSkewer, setSelectedSkewer] = React.useState(null);
+  const lastPlayTime = React.useRef({ click: 0, serve: 0 });
+
+  // 音效触发器 (带防抖)
+  const playSound = (type) => {
+    const now = Date.now();
+    if (now - lastPlayTime.current[type] < 50) return;
+    lastPlayTime.current[type] = now;
+
+    const audios = {
+      click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+      serve: 'https://assets.mixkit.co/active_storage/sfx/2802/2802-preview.mp3'
+    };
+    if (audios[type]) {
+      const audio = new Audio(audios[type]);
+      audio.volume = 0.5;
+      audio.play().catch(() => {}); // 忽略自动播放限制导致的错误
+    }
+  };
+
+  const handleSkewerClick = (skewerInfo) => {
+    if (gameStatus !== 'playing') return;
+    playSound('click');
+    if (selectedSkewer && selectedSkewer.grillId === skewerInfo.grillId && selectedSkewer.slotIdx === skewerInfo.slotIdx) {
+      setSelectedSkewer(null);
+    } else {
+      setSelectedSkewer(skewerInfo);
+    }
+  };
+
+  const handleSlotClick = (grillId, slotIdx) => {
+    if (selectedSkewer) {
+      moveSkewer(selectedSkewer, grillId, slotIdx);
+      setSelectedSkewer(null);
+    }
+  };
+
   const handleDragStart = (e, skewerInfo) => {
     e.dataTransfer.setData('skewer-info', JSON.stringify(skewerInfo));
   };
@@ -55,8 +92,18 @@ function App() {
             grill={grill} 
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onServeComplete={completeServe}
+            onDrop={(e, gid, sid) => {
+              e.preventDefault();
+              const info = JSON.parse(e.dataTransfer.getData('skewer-info'));
+              moveSkewer(info, gid, sid);
+            }}
+            onServeComplete={(gid) => {
+              playSound('serve');
+              completeServe(gid);
+            }}
+            onSlotClick={handleSlotClick}
+            onSkewerClick={handleSkewerClick}
+            selectedSkewer={selectedSkewer}
           />
         ))}
       </div>
