@@ -3,10 +3,12 @@ import React from 'react';
 import { useGameState } from './hooks/useGameState';
 import Grill from './components/Grill';
 import LeaderboardDrawer from './components/LeaderboardDrawer';
+import TutorialOverlay from './components/TutorialOverlay';
 import './App.css';
 
 function App() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = React.useState(false);
+  const [showTutorial, setShowTutorial] = React.useState(true);
   const [leaderboardKey, setLeaderboardKey] = React.useState(0);
   const { 
     grills, 
@@ -17,7 +19,7 @@ function App() {
     initGame,
     moveSkewer,
     completeServe
-  } = useGameState(isLeaderboardOpen);
+  } = useGameState(isLeaderboardOpen || showTutorial);
 
   const [selectedSkewer, setSelectedSkewer] = React.useState(null);
   const leaderboardBtnRef = React.useRef(null);
@@ -142,6 +144,10 @@ function App() {
         onClose={() => setIsLeaderboardOpen(false)} 
       />
 
+      {showTutorial && (
+        <TutorialOverlay onClose={() => setShowTutorial(false)} />
+      )}
+
       {gameStatus !== 'playing' && (
         <div className="modal-overlay">
           <div className="game-modal">
@@ -172,6 +178,7 @@ function App() {
             <button onClick={() => {
               setIsSubmitted(false);
               initGame();
+              setShowTutorial(true); // 重启显示指引
             }} className="restart-btn">再烤一轮!</button>
           </div>
         </div>

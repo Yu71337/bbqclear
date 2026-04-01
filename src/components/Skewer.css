@@ -13,13 +13,12 @@
     filter: drop-shadow(0 4px 5px rgba(0,0,0,0.4));
     z-index: 10;
     user-select: none;
-    -webkit-user-drag: element;
     pointer-events: auto;
 }
 
 .skewer:active {
     cursor: grabbing;
-    transform: scale(1.1) rotate(5deg);
+    transform: scale(1.1) rotate(5deg) !important;
 }
 
 .skewer .icon {
@@ -42,7 +41,7 @@
 }
 
 .skewer.selected {
-    transform: scale(1.15) translateY(-10px);
+    transform: scale(1.15) translateY(-10px) !important;
     filter: drop-shadow(0 0 15px var(--text-gold));
     z-index: 100;
 }
@@ -67,10 +66,10 @@
 .smoke-container {
     position: absolute;
     top: -20px;
-    width: 100%;
+    width: 60px;
     height: 40px;
     pointer-events: none;
-    z-index: 5;
+    z-index: 2000;
 }
 
 .smoke-particle {
