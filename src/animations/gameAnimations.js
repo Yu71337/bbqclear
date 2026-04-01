@@ -31,6 +31,7 @@ export const playServeAnimation = (elements, targetElement, onComplete) => {
         scale: 0.1,
         rotation: 180,
         opacity: 0,
+        zIndex: 1000,
         duration: 0.6,
         stagger: 0.05,
         ease: "power2.in"

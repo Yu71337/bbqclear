@@ -162,12 +162,7 @@ export const useGameState = (isPaused = false) => {
     });
   }, []);
 
-  const saveHighScore = useCallback((finalScore) => {
-    const scores = JSON.parse(localStorage.getItem('bbqclear-scores') || '[]');
-    scores.push({ score: finalScore, date: new Date().toLocaleDateString() });
-    scores.sort((a, b) => b.score - a.score);
-    localStorage.setItem('bbqclear-scores', JSON.stringify(scores.slice(0, 10)));
-  }, []);
+
 
   // 监控胜利与匹配检测
   useEffect(() => {
@@ -197,19 +192,14 @@ export const useGameState = (isPaused = false) => {
             const bonus = timeLeft * 10;
             setScore(s => s + bonus);
             setGameStatus('won');
-            saveHighScore(score + bonus);
         }
         
-        if (gameStatus === 'lost') {
-            saveHighScore(score);
-        }
-
         return needsUpdate || (!anyRemaining && gameStatus === 'playing') ? nextGrills : prevGrills;
       });
     }, 100);
 
     return () => clearTimeout(checkId);
-  }, [grills, gameStatus, setScore, timeLeft, score, saveHighScore]); 
+  }, [grills, gameStatus, setScore, timeLeft, score]); 
 
   return {
     grills,
