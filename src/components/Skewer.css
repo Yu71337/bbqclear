@@ -21,11 +21,31 @@
     transform: scale(1.1) rotate(5deg) !important;
 }
 
-.skewer .icon {
-    font-size: 2.5rem;
+.icon-ring-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: -15px;
-    z-index: 2;
+}
+
+.progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.skewer .icon {
+    font-size: 2.2rem;
+    z-index: 4;
     text-shadow: 0 4px 6px rgba(0,0,0,0.6);
+    position: relative;
+    pointer-events: none;
 }
 
 .skewer .stick {
@@ -47,47 +67,5 @@
 }
 
 .skewer.burnt .icon {
-    filter: brightness(0.2) grayscale(1);
-}
-
-.doneness-overlay {
-    position: absolute;
-    top: 15px;
-    width: 45px;
-    height: 45px;
-    background: #000;
-    opacity: var(--doneness-opacity, 0);
-    border-radius: 50%;
-    z-index: 1;
-    pointer-events: none;
-    mix-blend-mode: multiply;
-}
-
-.smoke-container {
-    position: absolute;
-    top: -20px;
-    width: 60px;
-    height: 40px;
-    pointer-events: none;
-    z-index: 2000;
-}
-
-.smoke-particle {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.6);
-    filter: blur(3px);
-    animation: smokeUp 2s infinite ease-out;
-}
-
-.smoke-particle.black {
-    background: rgba(50, 50, 50, 0.8);
-}
-
-@keyframes smokeUp {
-    0% { transform: translateY(0) scale(1); opacity: 0; }
-    20% { opacity: 0.5; }
-    100% { transform: translateY(-40px) scale(2.5); opacity: 0; }
+    filter: brightness(0.25) grayscale(1);
 }
