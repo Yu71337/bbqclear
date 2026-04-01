@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import './Skewer.css';
 
-// 模拟设计图中的食材图标
 const FOOD_ICONS = {
   meat: '🍖',
   corn: '🌽',
@@ -20,31 +19,45 @@ const FOOD_COLORS = {
   chicken: '#DEB887'
 };
 
+const RING_RADIUS = 22;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS; // ≈ 138.2
+
+const getDoneColor = (level, isBurnt) => {
+  if (isBurnt || level >= 10) return '#212121';
+  if (level <= 0) return 'transparent';
+  if (level <= 3) return '#4CAF50';
+  if (level <= 6) return '#FFC107';
+  return '#FF5722';
+};
+
 const Skewer = ({ type, id, onDragStart, onClick, isSelected, level = 0, isBurnt = false }) => {
   const skewerRef = useRef(null);
   if (!type) return null;
 
   useEffect(() => {
     if (skewerRef.current) {
-        // 设置初始 pointer-events 为 none，防止入场动画干扰交互
-        gsap.set(skewerRef.current, { pointerEvents: "none" });
-        gsap.fromTo(skewerRef.current, 
-            { scale: 0, opacity: 0 },
-            { 
-              scale: 1, 
-              opacity: 1, 
-              duration: 0.4, 
-              ease: "back.out(1.5)",
-              onComplete: () => {
-                 if (skewerRef.current) skewerRef.current.style.pointerEvents = "auto";
-              }
-            }
-        );
+      gsap.set(skewerRef.current, { pointerEvents: 'none' });
+      gsap.fromTo(
+        skewerRef.current,
+        { scale: 0, opacity: 0 },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.4,
+          ease: 'back.out(1.5)',
+          onComplete: () => {
+            if (skewerRef.current) skewerRef.current.style.pointerEvents = 'auto';
+          }
+        }
+      );
     }
   }, []);
 
+  const ringColor = getDoneColor(level, isBurnt);
+  const dashOffset = RING_CIRCUMFERENCE * (1 - Math.min(level, 10) / 10);
+
   return (
-    <div 
+    <div
       ref={skewerRef}
       className={`skewer ${isSelected ? 'selected' : ''} ${isBurnt ? 'burnt' : ''}`}
       draggable
@@ -53,23 +66,34 @@ const Skewer = ({ type, id, onDragStart, onClick, isSelected, level = 0, isBurnt
         onDragStart(e, id);
       }}
       onClick={onClick}
-      style={{ 
-        '--food-color': isBurnt ? '#222' : FOOD_COLORS[type],
-        '--doneness-opacity': Math.min(level / 10, 0.8)
-      }}
+      style={{ '--food-color': isBurnt ? '#222' : FOOD_COLORS[type] }}
     >
-      <div className="doneness-overlay"></div>
-      <div className="smoke-container">
-        {[...Array(isBurnt ? 5 : Math.max(0, level - 2))].map((_, i) => (
-          <div key={i} className={`smoke-particle ${isBurnt ? 'black' : 'white'}`} 
-               style={{ 
-                 left: `${Math.random() * 40 + 10}px`,
-                 animationDelay: `${Math.random() * 2}s`,
-                 opacity: 0.3 + (level / 20)
-               }}></div>
-        ))}
+      <div className="icon-ring-wrapper">
+        <svg className="progress-ring" width="60" height="60" viewBox="0 0 60 60">
+          {/* 底层灰环 */}
+          <circle
+            cx="30" cy="30" r={RING_RADIUS}
+            fill="none"
+            stroke="rgba(255,255,255,0.2)"
+            strokeWidth="4"
+          />
+          {/* 进度环 */}
+          {level > 0 && (
+            <circle
+              cx="30" cy="30" r={RING_RADIUS}
+              fill="none"
+              stroke={ringColor}
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={RING_CIRCUMFERENCE}
+              strokeDashoffset={dashOffset}
+              transform="rotate(-90 30 30)"
+              style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.5s ease' }}
+            />
+          )}
+        </svg>
+        <div className="icon">{FOOD_ICONS[type]}</div>
       </div>
-      <div className="icon">{FOOD_ICONS[type]}</div>
       <div className="stick"></div>
     </div>
   );

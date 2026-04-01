@@ -77,23 +77,47 @@ export const useGameState = (isPaused = false) => {
     return () => clearInterval(timer);
   }, [timeLeft, gameStatus, isPaused]);
 
-  // 烤熟度自增逻辑 (每 5 秒)
+  // 烤熟度自增逻辑 (每 10 秒)
   useEffect(() => {
     if (gameStatus !== 'playing' || isPaused) return;
 
     const interval = setInterval(() => {
-      setGrills(prevGrills => prevGrills.map(grill => {
-        const newSlots = grill.slots.map(item => {
-          if (!item || item.isBurnt) return item;
-          const nextLevel = Math.min(item.level + 1, 10);
-          return { 
-            ...item, 
-            level: nextLevel, 
-            isBurnt: nextLevel === 10 
-          };
+      let newBurntOccurred = false;
+      let latestGrills = null;
+
+      setGrills(prevGrills => {
+        const nextGrills = prevGrills.map(grill => {
+          const newSlots = grill.slots.map(item => {
+            if (!item || item.isBurnt) return item;
+            const nextLevel = Math.min(item.level + 1, 10);
+            const nowBurnt = nextLevel === 10;
+            if (nowBurnt && !item.isBurnt) newBurntOccurred = true;
+            return { ...item, level: nextLevel, isBurnt: nowBurnt };
+          });
+          return { ...grill, slots: newSlots };
         });
-        return { ...grill, slots: newSlots };
-      }));
+        latestGrills = nextGrills;
+        return nextGrills;
+      });
+
+      // 若有新增烧焦，立即扫描是否还能组成3连
+      // 使用 setTimeout 跳出 setState 上下文
+      setTimeout(() => {
+        if (!newBurntOccurred || !latestGrills) return;
+        const typeCounts = {};
+        latestGrills.forEach(g => {
+          g.slots.forEach(s => {
+            if (s && !s.isBurnt) {
+              typeCounts[s.type] = (typeCounts[s.type] || 0) + 1;
+            }
+          });
+        });
+        const canStillMatch = Object.values(typeCounts).some(c => c >= 3);
+        if (!canStillMatch) {
+          setGameStatus('lost');
+          setGameOverReason('🔥 烤焦太多！已经没有可上的菜了，游戏结束。');
+        }
+      }, 0);
     }, 10000);
 
     return () => clearInterval(interval);
@@ -315,6 +339,7 @@ export const useGameState = (isPaused = false) => {
     setScore,
     timeLeft,
     gameStatus,
+    gameOverReason,
     initGame,
     refillGrills,
     moveSkewer,
