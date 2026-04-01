@@ -19,14 +19,15 @@ const FOOD_COLORS = {
   chicken: '#DEB887'
 };
 
-const Skewer = ({ type, id, onDragStart }) => {
+const Skewer = ({ type, id, onDragStart, onClick, isSelected }) => {
   if (!type) return null;
 
   return (
     <div 
-      className="skewer"
+      className={`skewer ${isSelected ? 'selected' : ''}`}
       draggable
       onDragStart={(e) => onDragStart(e, id)}
+      onClick={onClick}
       style={{ '--food-color': FOOD_COLORS[type] }}
     >
       <div className="icon">{FOOD_ICONS[type]}</div>

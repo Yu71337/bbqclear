@@ -21,6 +21,12 @@
     box-shadow: inset 0 0 30px rgba(255,100,0,0.2), var(--shadow-deep);
 }
 
+.grill.serving {
+    pointer-events: none;
+    filter: brightness(1.2);
+    box-shadow: inset 0 0 40px var(--accent-amber), var(--shadow-deep);
+}
+
 .grill-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

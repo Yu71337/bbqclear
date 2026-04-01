@@ -4,7 +4,7 @@ import Skewer from './Skewer';
 import { playServeAnimation, playPopScore } from '../animations/gameAnimations';
 import './Grill.css';
 
-const Grill = ({ grill, onDragStart, onDragOver, onDrop, onServeComplete }) => {
+const Grill = ({ grill, onDragStart, onDragOver, onDrop, onServeComplete, onSlotClick, onSkewerClick, selectedSkewer }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -21,17 +21,30 @@ const Grill = ({ grill, onDragStart, onDragOver, onDrop, onServeComplete }) => {
     <div 
       ref={containerRef}
       className={`grill ${grill.isLocked ? 'locked' : ''} ${grill.isServing ? 'serving' : ''}`}
-      onDragOver={(e) => onDragOver(e, grill.id)}
-      onDrop={(e) => onDrop(e, grill.id)}
     >
       <div className="grill-grid">
         {grill.slots.map((item, idx) => (
-          <div key={`${grill.id}-slot-${idx}`} className="slot">
+          <div 
+            key={`${grill.id}-slot-${idx}`} 
+            className="slot"
+            onDragOver={(e) => onDragOver(e, grill.id)}
+            onDrop={(e) => onDrop(e, grill.id, idx)}
+            onClick={(e) => {
+                e.stopPropagation();
+                onSlotClick(grill.id, idx);
+            }}
+          >
             {item && (
               <Skewer 
-                type={item} 
+                key={item.id}
+                type={item.type} 
                 id={{ grillId: grill.id, slotIdx: idx }} 
                 onDragStart={onDragStart} 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSkewerClick({ grillId: grill.id, slotIdx: idx });
+                }}
+                isSelected={selectedSkewer && selectedSkewer.grillId === grill.id && selectedSkewer.slotIdx === idx}
               />
             )}
           </div>

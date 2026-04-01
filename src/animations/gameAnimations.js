@@ -2,7 +2,10 @@
 import gsap from 'gsap';
 
 export const playServeAnimation = (elements, onComplete) => {
-    if (!elements || elements.length === 0) return;
+    if (!elements || elements.length === 0) {
+        onComplete && onComplete();
+        return;
+    }
 
     const tl = gsap.timeline({ onComplete });
 
