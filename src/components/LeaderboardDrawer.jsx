@@ -28,10 +28,10 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
     <div className={`leaderboard-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}>
       <div className="leaderboard-drawer" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-header">
-          <h2>🔥 局域网大厨榜</h2>
+          <h2>🔥 烧烤大厨榜</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
-        
+
         <div className="drawer-content">
           {loading ? (
             <div className="loading">加载中...</div>
@@ -53,7 +53,7 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
         </div>
 
         <div className="drawer-footer">
-            提示：只有在同一局域网下的战绩才会被记录
+          提示：快烤焦的食材，通过移动到另一个盘子，可以适当降低温度~
         </div>
       </div>
     </div>
