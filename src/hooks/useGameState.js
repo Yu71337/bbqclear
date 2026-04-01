@@ -28,14 +28,18 @@ export const useGameState = (isPaused = false) => {
       isLocked: false,
     }));
     
-    // 初始前排随机填充 (填中 2 个)
+    // 初始前排随机填充 (填中 2 个)，初始熟度随机 0~5
     newGrills.forEach(grill => {
       const emptyIndices = [0, 1, 2];
       const fillCount = 2; 
       for(let j = 0; j < fillCount; j++) {
         const randomIndex = Math.floor(Math.random() * emptyIndices.length);
         const slotIdx = emptyIndices.splice(randomIndex, 1)[0];
-        grill.slots[slotIdx] = grill.pending.shift();
+        const food = grill.pending.shift();
+        if (food) {
+          food.level = Math.floor(Math.random() * 6); // 0~5 随机初始熟度
+        }
+        grill.slots[slotIdx] = food;
       }
     });
 
@@ -77,11 +81,13 @@ export const useGameState = (isPaused = false) => {
     return () => clearInterval(timer);
   }, [timeLeft, gameStatus, isPaused]);
 
-  // 烤熟度自增逻辑 (每 10 秒)
+  // 烤熟度自增逻辑 (随机 5~8 秒 +1)
   useEffect(() => {
     if (gameStatus !== 'playing' || isPaused) return;
 
-    const interval = setInterval(() => {
+    let timerId = null;
+
+    const tick = () => {
       let newBurntOccurred = false;
       let latestGrills = null;
 
@@ -101,7 +107,6 @@ export const useGameState = (isPaused = false) => {
       });
 
       // 若有新增烧焦，立即扫描是否还能组成3连
-      // 使用 setTimeout 跳出 setState 上下文
       setTimeout(() => {
         if (!newBurntOccurred || !latestGrills) return;
         const typeCounts = {};
@@ -118,9 +123,17 @@ export const useGameState = (isPaused = false) => {
           setGameOverReason('🔥 烤焦太多！已经没有可上的菜了，游戏结束。');
         }
       }, 0);
-    }, 10000);
 
-    return () => clearInterval(interval);
+      // 随机 5000~8000ms 后执行下一次
+      const nextDelay = 5000 + Math.random() * 3000;
+      timerId = setTimeout(tick, nextDelay);
+    };
+
+    // 首次随机延迟后开始
+    const initialDelay = 5000 + Math.random() * 3000;
+    timerId = setTimeout(tick, initialDelay);
+
+    return () => clearTimeout(timerId);
   }, [gameStatus, isPaused]);
 
   useEffect(() => {
