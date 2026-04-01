@@ -7,7 +7,7 @@ const SLOT_PER_GRILL = 3;
 let _idCounter = 0;
 const generateFood = (type) => ({ type, id: `food-${_idCounter++}` });
 
-export const useGameState = () => {
+export const useGameState = (isPaused = false) => {
   const [grills, setGrills] = useState([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(120); // 2分钟
@@ -22,11 +22,14 @@ export const useGameState = () => {
       isLocked: false,
     }));
     
-    // 初始前排填充 (至少 2 个)
+    // 初始前排随机填充 (填中 2 个)
     newGrills.forEach(grill => {
+      const emptyIndices = [0, 1, 2];
       const fillCount = 2; 
       for(let j = 0; j < fillCount; j++) {
-        grill.slots[j] = grill.pending.shift();
+        const randomIndex = Math.floor(Math.random() * emptyIndices.length);
+        const slotIdx = emptyIndices.splice(randomIndex, 1)[0];
+        grill.slots[slotIdx] = grill.pending.shift();
       }
     });
 
@@ -54,7 +57,7 @@ export const useGameState = () => {
 
   // 计时器逻辑
   useEffect(() => {
-    if (gameStatus !== 'playing') return;
+    if (gameStatus !== 'playing' || isPaused) return;
     
     if (timeLeft <= 0) {
       setGameStatus('lost');
@@ -74,18 +77,18 @@ export const useGameState = () => {
 
   // 提取补位逻辑以便内部调用
   // 提取补位逻辑以便内部调用
-  const refillSpecificGrill = (grill) => {
+  const refillSpecificGrill = (grill, count = 1) => {
     const newSlots = [...grill.slots];
     let newPending = [...grill.pending];
     
-    // 动态探测补位：确保盘中总数补齐到 2 个为止，始终保留 1 个空位
-    for (let i = 0; i < SLOT_PER_GRILL; i++) {
-        const currentCount = newSlots.filter(s => s !== null).length;
-        if (currentCount >= 2 || newPending.length === 0) break;
+    // 动态探测补位：确保盘中空位被补齐至目标数量 (count)
+    for (let i = 0; i < count; i++) {
+        const emptyIndices = newSlots.map((s, idx) => s === null ? idx : null).filter(idx => idx !== null);
+        if (emptyIndices.length === 0 || newPending.length === 0) break;
         
-        if (newSlots[i] === null) {
-            newSlots[i] = newPending.shift();
-        }
+        const randomIndex = Math.floor(Math.random() * emptyIndices.length);
+        const targetIdx = emptyIndices[randomIndex];
+        newSlots[targetIdx] = newPending.shift();
     }
     return { ...grill, slots: newSlots, pending: newPending };
   };
@@ -130,22 +133,28 @@ export const useGameState = () => {
 
   const completeServe = useCallback((grillId) => {
     setGrills(prev => {
-        // 先检查是否有还在 serving 的盘子，如果没有且全局扫描成功，增加分数（在此处触发分数更新更安全）
         const anyServing = prev.find(g => g.id === grillId && g.isServing);
         if (anyServing) {
             setScore(s => s + 100);
         }
 
+        // 计算场上总数
+        const totalVisibleCount = prev.reduce((acc, g) => 
+            acc + g.slots.filter(s => s !== null).length, 0
+        );
+        
+        // 50% 概率上 3 个菜，如果场上少于 20 个
+        const refillCount = (totalVisibleCount < 20 && Math.random() > 0.5) ? 3 : 2;
+
         return prev.map(g => {
             if (g.id === grillId) {
                 if (!g.isServing) return g;
-                // 原子化操作：清除 serving 状态的同时立刻补齐，防止被后续扫描再次触发
-                return refillSpecificGrill({ ...g, slots: [null, null, null], isServing: false });
+                return refillSpecificGrill({ ...g, slots: [null, null, null], isServing: false }, refillCount);
             }
             
-            // 被动补位扫描：仅针对完全空置且未锁定的盘子
             if (!g.isServing && g.slots.every(s => s === null) && g.pending.length > 0) {
-                return refillSpecificGrill(g);
+                // 如果场上少于 20 个，其他空盘也享受爆发补给
+                return refillSpecificGrill(g, totalVisibleCount < 20 ? refillCount : 1);
             }
             
             return g;
@@ -162,6 +171,7 @@ export const useGameState = () => {
 
   // 监控胜利与匹配检测
   useEffect(() => {
+    if (isPaused) return;
     // 异步执行检测，避免阻塞
     const checkId = setTimeout(() => {
       setGrills(prevGrills => {
