@@ -7,6 +7,7 @@ import './App.css';
 
 function App() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = React.useState(false);
+  const [leaderboardKey, setLeaderboardKey] = React.useState(0);
   const { 
     grills, 
     score, 
@@ -74,7 +75,8 @@ function App() {
         body: JSON.stringify({ name: playerName, score })
       });
       setIsSubmitted(true);
-      setIsLeaderboardOpen(true); // 自动打开排行榜预览
+      setLeaderboardKey(Date.now()); // 强制榜单重置获取最新数据
+      setIsLeaderboardOpen(true); // 已提交才展示榜单确认
     } catch (err) {
       console.error('Failed to submit score:', err);
     }
@@ -125,6 +127,7 @@ function App() {
       </div>
 
       <LeaderboardDrawer 
+        key={leaderboardKey}
         isOpen={isLeaderboardOpen} 
         onClose={() => setIsLeaderboardOpen(false)} 
       />
