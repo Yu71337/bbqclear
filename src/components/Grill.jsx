@@ -38,6 +38,8 @@ const Grill = ({ grill, onDragStart, onDragOver, onDrop, onServeComplete, onSlot
               <Skewer 
                 key={item.id}
                 type={item.type} 
+                level={item.level}
+                isBurnt={item.isBurnt}
                 id={{ grillId: grill.id, slotIdx: idx }} 
                 onDragStart={onDragStart} 
                 onClick={(e) => {

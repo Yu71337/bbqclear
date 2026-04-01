@@ -20,12 +20,14 @@ const FOOD_COLORS = {
   chicken: '#DEB887'
 };
 
-const Skewer = ({ type, id, onDragStart, onClick, isSelected }) => {
+const Skewer = ({ type, id, onDragStart, onClick, isSelected, level = 0, isBurnt = false }) => {
   const skewerRef = useRef(null);
   if (!type) return null;
 
   useEffect(() => {
     if (skewerRef.current) {
+        // 设置初始 pointer-events 为 none，防止入场动画干扰交互
+        gsap.set(skewerRef.current, { pointerEvents: "none" });
         gsap.fromTo(skewerRef.current, 
             { scale: 0, opacity: 0 },
             { 
@@ -33,7 +35,9 @@ const Skewer = ({ type, id, onDragStart, onClick, isSelected }) => {
               opacity: 1, 
               duration: 0.4, 
               ease: "back.out(1.5)",
-              clearProps: "all"
+              onComplete: () => {
+                 if (skewerRef.current) skewerRef.current.style.pointerEvents = "auto";
+              }
             }
         );
     }
@@ -42,15 +46,29 @@ const Skewer = ({ type, id, onDragStart, onClick, isSelected }) => {
   return (
     <div 
       ref={skewerRef}
-      className={`skewer ${isSelected ? 'selected' : ''}`}
+      className={`skewer ${isSelected ? 'selected' : ''} ${isBurnt ? 'burnt' : ''}`}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = 'move';
         onDragStart(e, id);
       }}
       onClick={onClick}
-      style={{ '--food-color': FOOD_COLORS[type] }}
+      style={{ 
+        '--food-color': isBurnt ? '#222' : FOOD_COLORS[type],
+        '--doneness-opacity': Math.min(level / 10, 0.8)
+      }}
     >
+      <div className="doneness-overlay"></div>
+      <div className="smoke-container">
+        {[...Array(isBurnt ? 5 : Math.max(0, level - 2))].map((_, i) => (
+          <div key={i} className={`smoke-particle ${isBurnt ? 'black' : 'white'}`} 
+               style={{ 
+                 left: `${Math.random() * 40 + 10}px`,
+                 animationDelay: `${Math.random() * 2}s`,
+                 opacity: 0.3 + (level / 20)
+               }}></div>
+        ))}
+      </div>
       <div className="icon">{FOOD_ICONS[type]}</div>
       <div className="stick"></div>
     </div>

@@ -9,14 +9,6 @@ export const playServeAnimation = (elements, targetElement, onComplete) => {
 
     const tl = gsap.timeline({ onComplete });
     
-    // 获取目标位置 (屏幕坐标)
-    const targetRect = targetElement ? targetElement.getBoundingClientRect() : { left: window.innerWidth, top: 0 };
-    const elementsRect = elements[0].getBoundingClientRect();
-
-    // 计算相对位移
-    const deltaX = targetRect.left - elementsRect.left;
-    const deltaY = targetRect.top - elementsRect.top;
-
     // 1. 食材先向中心挤压 (弹性)
     tl.to(elements, {
         scale: 0.8,
@@ -24,17 +16,17 @@ export const playServeAnimation = (elements, targetElement, onComplete) => {
         ease: "power2.in"
     });
 
-    // 2. 向目标方向飞出并缩小
+    // 2. 向右上方飞出 (固定位姿)
     tl.to(elements, {
-        x: deltaX,
-        y: deltaY,
-        scale: 0.1,
-        rotation: 180,
+        x: 400,
+        y: -600,
+        scale: 0.2,
+        rotation: 45,
         opacity: 0,
         zIndex: 1000,
         duration: 0.6,
         stagger: 0.05,
-        ease: "power2.in"
+        ease: "power1.in"
     });
 };
 

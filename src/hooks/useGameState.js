@@ -5,13 +5,19 @@ const FOOD_TYPES = ['meat', 'corn', 'mushroom', 'shrimp', 'chicken'];
 const GRILL_COUNT = 12;
 const SLOT_PER_GRILL = 3;
 let _idCounter = 0;
-const generateFood = (type) => ({ type, id: `food-${_idCounter++}` });
+const generateFood = (type) => ({ 
+  type, 
+  id: `food-${_idCounter++}`, 
+  level: 0, 
+  isBurnt: false 
+});
 
 export const useGameState = (isPaused = false) => {
   const [grills, setGrills] = useState([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(120); // 2分钟
   const [gameStatus, setGameStatus] = useState('playing'); // playing, won, lost
+  const [gameOverReason, setGameOverReason] = useState('');
 
   // 初始化游戏
   const initGame = useCallback(() => {
@@ -69,7 +75,29 @@ export const useGameState = (isPaused = false) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, gameStatus]);
+  }, [timeLeft, gameStatus, isPaused]);
+
+  // 烤熟度自增逻辑 (每 5 秒)
+  useEffect(() => {
+    if (gameStatus !== 'playing' || isPaused) return;
+
+    const interval = setInterval(() => {
+      setGrills(prevGrills => prevGrills.map(grill => {
+        const newSlots = grill.slots.map(item => {
+          if (!item || item.isBurnt) return item;
+          const nextLevel = Math.min(item.level + 1, 10);
+          return { 
+            ...item, 
+            level: nextLevel, 
+            isBurnt: nextLevel === 10 
+          };
+        });
+        return { ...grill, slots: newSlots };
+      }));
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [gameStatus, isPaused]);
 
   useEffect(() => {
     initGame();
@@ -123,7 +151,12 @@ export const useGameState = (isPaused = false) => {
         }
         if (g.id === targetGrillId) {
           const newSlots = [...g.slots];
-          newSlots[actualTargetSlotIdx] = itemToMove;
+          let item = { ...itemToMove };
+          // 降级机制：如果食材很烫(level > 5)，移动时重置为 3
+          if (item.level > 5 && !item.isBurnt) {
+            item.level = 3;
+          }
+          newSlots[actualTargetSlotIdx] = item;
           return { ...g, slots: newSlots };
         }
         return g;
@@ -146,19 +179,69 @@ export const useGameState = (isPaused = false) => {
         // 50% 概率上 3 个菜，如果场上少于 20 个
         const refillCount = (totalVisibleCount < 20 && Math.random() > 0.5) ? 3 : 2;
 
-        return prev.map(g => {
+        let nextGrills = prev.map(g => {
             if (g.id === grillId) {
                 if (!g.isServing) return g;
                 return refillSpecificGrill({ ...g, slots: [null, null, null], isServing: false }, refillCount);
             }
-            
             if (!g.isServing && g.slots.every(s => s === null) && g.pending.length > 0) {
-                // 如果场上少于 20 个，其他空盘也享受爆发补给
                 return refillSpecificGrill(g, totalVisibleCount < 20 ? refillCount : 1);
             }
-            
             return g;
         });
+
+        // 方案 B：保底匹配逻辑
+        // 检查场上是否至少有 1 组 3 个相同的正常物品
+        const getFieldStats = (gs) => {
+          const stats = {};
+          gs.forEach(g => g.slots.forEach(s => {
+            if (s && !s.isBurnt) {
+              stats[s.type] = (stats[s.type] || 0) + 1;
+            }
+          }));
+          return stats;
+        };
+
+        let currentStats = getFieldStats(nextGrills);
+        const hasMatch = Object.values(currentStats).some(count => count >= 3);
+
+        if (!hasMatch) {
+          // 找一个场上已有的且 pending 中有的，补齐到 3 个
+          const candidates = Object.entries(currentStats).filter(([type, count]) => count > 0);
+          if (candidates.length > 0) {
+             const [type, count] = candidates[0];
+             const needed = 3 - count;
+             // 寻找一个有空位的盘子
+             for (let i = 0; i < needed; i++) {
+               const targetG = nextGrills.find(g => g.slots.includes(null) && !g.isServing);
+               if (targetG) {
+                 nextGrills = nextGrills.map(g => {
+                   if (g.id === targetG.id) {
+                     const emptyIdx = g.slots.indexOf(null);
+                     const newSlots = [...g.slots];
+                     newSlots[emptyIdx] = generateFood(type); // 强制生成
+                     return { ...g, slots: newSlots };
+                   }
+                   return g;
+                 });
+               }
+             }
+          } else {
+             // 场上完全没东西了，随便刷 3 个同种
+             const randomType = FOOD_TYPES[Math.floor(Math.random() * FOOD_TYPES.length)];
+             const targetG = nextGrills.find(g => !g.isServing);
+             if (targetG) {
+               nextGrills = nextGrills.map(g => {
+                 if (g.id === targetG.id) {
+                   return { ...g, slots: [generateFood(randomType), generateFood(randomType), generateFood(randomType)] };
+                 }
+                 return g;
+               });
+             }
+          }
+        }
+
+        return nextGrills;
     });
   }, []);
 
@@ -179,9 +262,11 @@ export const useGameState = (isPaused = false) => {
             
             if (grill.isServing) return grill;
             const slots = grill.slots;
-            // 检查三连
+            // 检查三连：且熟度必须 >= 1，且不能有烤焦的
             if (slots[0] && slots[1] && slots[2] && 
-                slots[0].type === slots[1].type && slots[0].type === slots[2].type) {
+                slots[0].type === slots[1].type && slots[0].type === slots[2].type &&
+                slots[0].level >= 1 && slots[1].level >= 1 && slots[2].level >= 1 &&
+                !slots[0].isBurnt && !slots[1].isBurnt && !slots[2].isBurnt) {
               needsUpdate = true;
               return { ...grill, isServing: true };
             }
@@ -192,6 +277,28 @@ export const useGameState = (isPaused = false) => {
             const bonus = timeLeft * 10;
             setScore(s => s + bonus);
             setGameStatus('won');
+        }
+
+        // 死锁检测：如果没有 3 连，且空位不足以补足
+        const stats = {};
+        let emptyCount = 0;
+        let normalCount = 0;
+        nextGrills.forEach(g => {
+          emptyCount += g.slots.filter(s => s === null).length;
+          g.slots.forEach(s => {
+            if (s && !s.isBurnt) {
+              normalCount++;
+              stats[s.type] = (stats[s.type] || 0) + 1;
+            }
+          });
+        });
+
+        const canMatch = Object.values(stats).some(c => c >= 3);
+        const canRefillMatch = Object.entries(stats).some(([t, c]) => c + emptyCount >= 3) || emptyCount >= 3;
+
+        if (!canMatch && !canRefillMatch && gameStatus === 'playing') {
+           setGameStatus('lost');
+           setGameOverReason('已没有更多食材能上菜');
         }
         
         return needsUpdate || (!anyRemaining && gameStatus === 'playing') ? nextGrills : prevGrills;
