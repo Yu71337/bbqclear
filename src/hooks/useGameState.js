@@ -94,7 +94,7 @@ export const useGameState = (isPaused = false) => {
         });
         return { ...grill, slots: newSlots };
       }));
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [gameStatus, isPaused]);
@@ -306,7 +306,7 @@ export const useGameState = (isPaused = false) => {
     }, 100);
 
     return () => clearTimeout(checkId);
-  }, [grills, gameStatus, setScore, timeLeft, score]); 
+  }, [grills, gameStatus, setScore, timeLeft, score, isPaused]); 
 
   return {
     grills,
