@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Bot, Check, Languages } from 'lucide-react';
 import { generateAISuggestion } from '../utils/aiTranslation';
-import { TransUnit } from '../utils/xliffParser';
+import type { TransUnit } from '../utils/xliffParser';
 
 interface Props {
   item: TransUnit;

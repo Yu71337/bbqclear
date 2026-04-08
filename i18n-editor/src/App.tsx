@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { parseXliff, buildXliff, TransUnit } from './utils/xliffParser';
+import { useState, useMemo, useEffect } from 'react';
+import { parseXliff, buildXliff } from './utils/xliffParser';
+import type { TransUnit } from './utils/xliffParser';
 import { TranslationCard } from './components/TranslationCard';
 import { Download, Upload, Settings, Languages } from 'lucide-react';
 
