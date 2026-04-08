@@ -1,7 +1,8 @@
-# Task Tracking (Iteration 5)
+# 多语言编辑器项目 (Brainstorming)
 
-| Task | Status | Description |
-| ---- | ------ | ----------- |
-| Task 1: 进度环替换烟雾特效 | ✅ Completed | 删除旧烟雾代码，新增 SVG 圆形进度环 |
-| Task 2: 烧焦死锁检测 | ✅ Completed | 食材烧焦时扫描场上匹配性，无匹配则游戏结束 |
-| Task 3: 验证与提交 | ✅ Completed | 已合并至 master，代码已提交 |
+- [x] Explore project context — check files, docs, recent commits
+- [x] Ask clarifying questions — one at a time, understand purpose/constraints/success criteria
+- [x] Propose 2-3 approaches — with trade-offs and your recommendation
+- [x] Present design — in sections scaled to their complexity, get user approval after each section
+- [x] Write design doc — save to docs/plans/YYYY-MM-DD-<topic>-design.md and commit
+- [/] Transition to implementation — invoke writing-plans skill to create implementation plan
