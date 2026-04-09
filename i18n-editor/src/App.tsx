@@ -35,12 +35,15 @@ export default function App() {
   const [draftSearchId, setDraftSearchId] = useState('');
   const [draftSearchSource, setDraftSearchSource] = useState('');
   const [draftSearchTarget, setDraftSearchTarget] = useState('');
+  const [draftSearchNotSource, setDraftSearchNotSource] = useState('');
+  const [draftSearchNotTarget, setDraftSearchNotTarget] = useState('');
   const [draftSearchState, setDraftSearchState] = useState('All');
   const [draftSearchLengthRatio, setDraftSearchLengthRatio] = useState('All');
+  const [draftSearchCustomRatio, setDraftSearchCustomRatio] = useState('1.5');
 
   // Applied Filters
   const [appliedFilters, setAppliedFilters] = useState({
-    id: '', source: '', target: '', state: 'All', lengthRatio: 'All'
+    id: '', source: '', target: '', notSource: '', notTarget: '', state: 'All', lengthRatio: 'All', customRatio: '0'
   });
 
   // Batch state
@@ -75,8 +78,11 @@ export default function App() {
         setDraftSearchId('');
         setDraftSearchSource('');
         setDraftSearchTarget('');
+        setDraftSearchNotSource('');
+        setDraftSearchNotTarget('');
         setDraftSearchState('All');
         setDraftSearchLengthRatio('All');
+        setDraftSearchCustomRatio('1.5');
     }
 
     if (isXlsx) {
@@ -138,8 +144,11 @@ export default function App() {
       id: draftSearchId,
       source: draftSearchSource,
       target: draftSearchTarget,
+      notSource: draftSearchNotSource,
+      notTarget: draftSearchNotTarget,
       state: draftSearchState,
-      lengthRatio: draftSearchLengthRatio
+      lengthRatio: draftSearchLengthRatio,
+      customRatio: draftSearchLengthRatio === 'Custom' ? draftSearchCustomRatio : '0'
     });
   };
 
@@ -155,11 +164,16 @@ export default function App() {
       if (appliedFilters.lengthRatio === '< 1.5x' && ratio >= 1.5) return false;
       if (appliedFilters.lengthRatio === '1.5x - 2.0x' && (ratio < 1.5 || ratio > 2.0)) return false;
       if (appliedFilters.lengthRatio === '> 2.0x' && ratio <= 2.0) return false;
+      if (appliedFilters.lengthRatio === 'Custom' && ratio <= parseFloat(appliedFilters.customRatio || '0')) return false;
       
       if (appliedFilters.state !== 'All' && currentState !== appliedFilters.state) return false;
       if (appliedFilters.id && !item.id.toLowerCase().includes(appliedFilters.id.toLowerCase())) return false;
       if (appliedFilters.source && !item.source.toLowerCase().includes(appliedFilters.source.toLowerCase())) return false;
       if (appliedFilters.target && !currentTarget.toLowerCase().includes(appliedFilters.target.toLowerCase())) return false;
+      
+      if (appliedFilters.notSource && item.source.toLowerCase().includes(appliedFilters.notSource.toLowerCase())) return false;
+      if (appliedFilters.notTarget && currentTarget.toLowerCase().includes(appliedFilters.notTarget.toLowerCase())) return false;
+      
       return true;
     });
   }, [items, updates, appliedFilters]);
@@ -343,6 +357,14 @@ export default function App() {
                     <input type="text" className="mt-1 border border-slate-300 rounded p-2 text-sm font-normal" placeholder="你好..." value={draftSearchTarget} onChange={e => setDraftSearchTarget(e.target.value)} />
                  </label>
                  <label className="flex flex-col flex-1 min-w-[120px] text-xs font-semibold text-slate-600">
+                    Exclude Source
+                    <input type="text" className="mt-1 border border-slate-300 rounded p-2 text-sm font-normal" placeholder="Error..." value={draftSearchNotSource} onChange={e => setDraftSearchNotSource(e.target.value)} />
+                 </label>
+                 <label className="flex flex-col flex-1 min-w-[120px] text-xs font-semibold text-slate-600">
+                    Exclude Target
+                    <input type="text" className="mt-1 border border-slate-300 rounded p-2 text-sm font-normal" placeholder="错误..." value={draftSearchNotTarget} onChange={e => setDraftSearchNotTarget(e.target.value)} />
+                 </label>
+                 <label className="flex flex-col flex-1 min-w-[120px] text-xs font-semibold text-slate-600">
                     State
                     <select className="mt-1 border border-slate-300 rounded p-2 text-sm font-normal" value={draftSearchState} onChange={e => setDraftSearchState(e.target.value)}>
                       <option value="All">All</option>
@@ -354,12 +376,24 @@ export default function App() {
                  </label>
                  <label className="flex flex-col flex-1 min-w-[120px] text-xs font-semibold text-slate-600">
                     Length Ratio
-                    <select className="mt-1 border border-slate-300 rounded p-2 text-sm font-normal" value={draftSearchLengthRatio} onChange={e => setDraftSearchLengthRatio(e.target.value)}>
-                      <option value="All">All</option>
-                      <option value="< 1.5x">&lt; 1.5x</option>
-                      <option value="1.5x - 2.0x">1.5x - 2.0x</option>
-                      <option value="> 2.0x">&gt; 2.0x</option>
-                    </select>
+                    <div className="flex gap-1 mt-1">
+                      <select className="border border-slate-300 rounded p-2 text-sm font-normal flex-1" value={draftSearchLengthRatio} onChange={e => setDraftSearchLengthRatio(e.target.value)}>
+                        <option value="All">All</option>
+                        <option value="< 1.5x">&lt; 1.5x</option>
+                        <option value="1.5x - 2.0x">1.5x - 2.0x</option>
+                        <option value="> 2.0x">&gt; 2.0x</option>
+                        <option value="Custom">Custom (&gt;)...</option>
+                      </select>
+                      {draftSearchLengthRatio === 'Custom' && (
+                        <input 
+                          type="number" 
+                          step="0.1" 
+                          className="border border-slate-300 rounded p-2 text-sm font-normal w-16" 
+                          value={draftSearchCustomRatio} 
+                          onChange={e => setDraftSearchCustomRatio(e.target.value)} 
+                        />
+                      )}
+                    </div>
                  </label>
                </div>
                <button 
