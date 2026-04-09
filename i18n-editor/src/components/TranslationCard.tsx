@@ -6,15 +6,16 @@ import type { TransUnit } from '../utils/xliffParser';
 interface Props {
   item: TransUnit;
   targetLang: string;
-  config: { apiKey: string; baseUrl: string; model: string };
+  config: { apiKey: string; baseUrl: string; model: string; provider?: 'openai' | 'gemini'; systemPrompt: string };
   onUpdate: (target: string, state: string) => void;
   isSelected?: boolean;
   onToggleSelect?: () => void;
+  onGlobalLoadingChange?: (loading: boolean) => void;
 }
 
 import { useEffect } from 'react';
 
-export function TranslationCard({ item, targetLang, config, onUpdate, isSelected = false, onToggleSelect }: Props) {
+export function TranslationCard({ item, targetLang, config, onUpdate, isSelected = false, onToggleSelect, onGlobalLoadingChange }: Props) {
   const [localTarget, setLocalTarget] = useState(item.target);
   const [localState, setLocalState] = useState(item.state);
 
@@ -39,6 +40,7 @@ export function TranslationCard({ item, targetLang, config, onUpdate, isSelected
       return;
     }
     setLoadingAI(true);
+    if (onGlobalLoadingChange) onGlobalLoadingChange(true);
     setAiError('');
     try {
       const res = await generateAISuggestion({
@@ -46,13 +48,16 @@ export function TranslationCard({ item, targetLang, config, onUpdate, isSelected
         targetLang,
         apiKey: config.apiKey,
         baseUrl: config.baseUrl || 'https://api.openai.com/v1',
-        model: config.model || 'gpt-4'
+        model: config.model || 'gpt-4',
+        provider: config.provider,
+        systemPrompt: config.systemPrompt.replace('{{targetLang}}', targetLang)
       });
       setAiSuggestion(res);
     } catch (e: any) {
       setAiError(e.message);
     } finally {
       setLoadingAI(false);
+      if (onGlobalLoadingChange) onGlobalLoadingChange(false);
     }
   };
 
