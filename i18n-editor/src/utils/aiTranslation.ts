@@ -5,7 +5,13 @@ export async function generateAISuggestion(config: {
     baseUrl: string;
     model: string;
 }) {
-    const sysPrompt = `Translate the following to ${config.targetLang}. Rules:\n1. Keep standard localized button phrases unchanged if conventional.\n2. Length must closely match or be smaller than source.\n3. Do not translate variables wrapped in {}; keep them exactly as formatted. Output ONLY the translated text, without any quotes or explanations.`;
+    const sysPrompt = `You are a translation engine. Translate the following text to exactly: ${config.targetLang}.
+CRITICAL INSTRUCTIONS:
+1. Output ONLY the raw translated text.
+2. DO NOT include greetings, thinking steps, explanations, or quotes.
+3. DO NOT use markdown code blocks.
+4. Keep standard localized button phrases unchanged if conventional.
+5. Do not translate variables wrapped in {}; keep them exactly as formatted.`;
 
     const res = await fetch(`${config.baseUrl}/chat/completions`, {
         method: "POST",
