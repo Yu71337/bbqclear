@@ -56,6 +56,14 @@ export function TranslationCard({ item, targetLang, config, onUpdate, isSelected
     }
   };
 
+  const sourceLen = item.source.length;
+  const targetLen = localTarget.length;
+  const lengthRatio = targetLen / Math.max(sourceLen, 1);
+
+  let targetCountColor = "text-slate-400";
+  if (lengthRatio > 2.0) targetCountColor = "text-red-500 font-bold";
+  else if (lengthRatio >= 1.5) targetCountColor = "text-amber-500 font-bold";
+
   return (
     <div className="bg-white p-4 rounded shadow mb-4 flex flex-col md:flex-row gap-4 border border-gray-200">
       <div className="flex-1 flex flex-col">
@@ -73,6 +81,7 @@ export function TranslationCard({ item, targetLang, config, onUpdate, isSelected
         <div className="text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 min-h-[4rem]">
            {item.source}
         </div>
+        <div className="text-right text-[10px] text-slate-400 mt-1">{sourceLen} chars</div>
       </div>
       
       <div className="flex-1 flex flex-col gap-2">
@@ -119,6 +128,7 @@ export function TranslationCard({ item, targetLang, config, onUpdate, isSelected
           onBlur={handleBlur}
           dir="auto"
         />
+        <div className={`text-right text-[10px] mt-1 ${targetCountColor}`}>{targetLen} chars</div>
         
         {aiError && <div className="text-xs text-red-500 mt-1">{aiError}</div>}
         
