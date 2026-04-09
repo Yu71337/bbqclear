@@ -8,11 +8,20 @@ interface Props {
   targetLang: string;
   config: { apiKey: string; baseUrl: string; model: string };
   onUpdate: (target: string, state: string) => void;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export function TranslationCard({ item, targetLang, config, onUpdate }: Props) {
+import { useEffect } from 'react';
+
+export function TranslationCard({ item, targetLang, config, onUpdate, isSelected = false, onToggleSelect }: Props) {
   const [localTarget, setLocalTarget] = useState(item.target);
   const [localState, setLocalState] = useState(item.state);
+
+  useEffect(() => {
+    setLocalTarget(item.target);
+    setLocalState(item.state);
+  }, [item.target, item.state]);
   
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState('');
@@ -50,7 +59,17 @@ export function TranslationCard({ item, targetLang, config, onUpdate }: Props) {
   return (
     <div className="bg-white p-4 rounded shadow mb-4 flex flex-col md:flex-row gap-4 border border-gray-200">
       <div className="flex-1 flex flex-col">
-        <div className="text-xs font-mono text-gray-500 mb-1">{item.id}</div>
+        <div className="flex items-center gap-2 mb-1">
+          {onToggleSelect && (
+            <input 
+              type="checkbox" 
+              checked={isSelected} 
+              onChange={onToggleSelect} 
+              className="w-4 h-4 text-indigo-600 rounded border-gray-300" 
+            />
+          )}
+          <div className="text-xs font-mono text-gray-500">{item.id}</div>
+        </div>
         <div className="text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded border border-gray-100 min-h-[4rem]">
            {item.source}
         </div>
@@ -71,15 +90,26 @@ export function TranslationCard({ item, targetLang, config, onUpdate }: Props) {
                <option value="reviewed">reviewed</option>
                <option value="final">final</option>
             </select>
-            
-            <button 
-               onClick={handleAskAI} 
-               disabled={loadingAI}
-               className="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 flex items-center gap-1 rounded transition-colors disabled:opacity-50"
-            >
-               <Bot size={14} />
-               {loadingAI ? 'Thinking...' : 'Ask AI'}
-            </button>
+            <div className="flex gap-2">
+              <button 
+                 onClick={() => {
+                   setLocalTarget(item.source);
+                   setLocalState('translated');
+                   onUpdate(item.source, 'translated');
+                 }}
+                 className="text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 px-2 py-1 flex items-center gap-1 rounded transition-colors"
+              >
+                 ⎘ Sync
+              </button>
+              <button 
+                 onClick={handleAskAI} 
+                 disabled={loadingAI}
+                 className="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 flex items-center gap-1 rounded transition-colors disabled:opacity-50"
+              >
+                 <Bot size={14} />
+                 {loadingAI ? 'Thinking...' : 'Ask AI'}
+              </button>
+            </div>
         </div>
         
         <textarea 
