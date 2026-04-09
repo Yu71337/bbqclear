@@ -19,13 +19,14 @@ export async function generateAISuggestion(config: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                system_instruction: { parts: [{ text: config.systemPrompt }] },
+                systemInstruction: { parts: [{ text: config.systemPrompt }] },
                 contents: [{ role: "user", parts: [{ text: config.sourceText }] }]
             })
         });
 
         if (!res.ok) {
-            throw new Error(`Gemini API call failed: ${res.status} ${res.statusText}`);
+            const errText = await res.text();
+            throw new Error(`Gemini API Error (${res.status}): ${errText}`);
         }
         const data = await res.json();
         return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -48,7 +49,8 @@ export async function generateAISuggestion(config: {
     });
     
     if (!res.ok) {
-        throw new Error(`OpenAI API call failed: ${res.status} ${res.statusText}`);
+        const errText = await res.text();
+        throw new Error(`OpenAI API Error (${res.status}): ${errText}`);
     }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || "";

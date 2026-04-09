@@ -53,7 +53,7 @@ describe('aiTranslation', () => {
         expect(callArgs[0]).toBe("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=gemini-key");
         
         const body = JSON.parse(callArgs[1].body);
-        expect(body.system_instruction.parts[0].text).toContain("zh-CN");
+        expect(body.systemInstruction.parts[0].text).toContain("zh-CN");
         expect(body.contents[0].parts[0].text).toBe("Hello");
     });
 });
