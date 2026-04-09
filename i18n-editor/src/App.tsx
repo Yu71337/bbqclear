@@ -26,6 +26,7 @@ export default function App() {
   const [searchSource, setSearchSource] = useState('');
   const [searchTarget, setSearchTarget] = useState('');
   const [searchState, setSearchState] = useState('All');
+  const [searchLengthRatio, setSearchLengthRatio] = useState('All');
 
   // Batch state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -113,13 +114,21 @@ export default function App() {
       const currentTarget = updates[item.id]?.target ?? item.target;
       const currentState = updates[item.id]?.state ?? item.state;
       
+      const sourceLen = item.source.length;
+      const targetLen = currentTarget.length;
+      const ratio = targetLen / Math.max(sourceLen, 1);
+      
+      if (searchLengthRatio === '< 1.5x' && ratio >= 1.5) return false;
+      if (searchLengthRatio === '1.5x - 2.0x' && (ratio < 1.5 || ratio > 2.0)) return false;
+      if (searchLengthRatio === '> 2.0x' && ratio <= 2.0) return false;
+      
       if (searchState !== 'All' && currentState !== searchState) return false;
       if (searchId && !item.id.toLowerCase().includes(searchId.toLowerCase())) return false;
       if (searchSource && !item.source.toLowerCase().includes(searchSource.toLowerCase())) return false;
       if (searchTarget && !currentTarget.toLowerCase().includes(searchTarget.toLowerCase())) return false;
       return true;
     });
-  }, [items, updates, searchId, searchSource, searchTarget, searchState]);
+  }, [items, updates, searchId, searchSource, searchTarget, searchState, searchLengthRatio]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -274,6 +283,15 @@ export default function App() {
                     <option value="translated">translated</option>
                     <option value="reviewed">reviewed</option>
                     <option value="final">final</option>
+                  </select>
+               </label>
+               <label className="flex flex-col flex-1 min-w-[150px] text-xs font-semibold text-slate-600">
+                  Length Ratio
+                  <select className="mt-1 border border-slate-300 rounded p-2 text-sm font-normal" value={searchLengthRatio} onChange={e => setSearchLengthRatio(e.target.value)}>
+                    <option value="All">All</option>
+                    <option value="< 1.5x">&lt; 1.5x</option>
+                    <option value="1.5x - 2.0x">1.5x - 2.0x</option>
+                    <option value="> 2.0x">&gt; 2.0x</option>
                   </select>
                </label>
             </div>
